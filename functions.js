@@ -6,7 +6,29 @@ f(z) = z^2 + c, where z is an imaginary variable and c is the original value of 
 the function.
 */
 
-function iterate_complex_plane(max_iterations) {
+function iterate_complex_plane(max_iterations, complex_plane_width_0, complex_plane_height_0, zoom, x_coord, y_coord) {
+
+    //initial coordinates
+    a_0_0 = 0  //viewport's upper left corner x coordinate
+    a_max_0 = complex_plane_width_0  //viewport's upper right corner x coordinate
+    b_0_0 = 0  //viewport's upper left corner y coordinate
+    b_max_0 = complex_plane_height_0  //viewport's lower left corner y coordinate
+
+    //viewport's lengths calculation
+    l_a_0 = complex_plane_width_0
+    l_b_0 = complex_plane_height_0
+    l_a_1 = complex_plane_width_0 / zoom
+    l_b_1 = complex_plane_height_0 / zoom
+    
+    //viewport length difference after zoom
+    a_length_diff = (l_a_0 - l_a_1)
+    b_length_diff = (l_b_0 - l_b_1)
+
+    //subsequent coordinates calculation
+    a_0_1 = a_0_0 + a_length_diff / 2 - complex_plane_width_0 / 2 + x_coord
+    a_max_1 = a_max_0 - a_length_diff / 2 - complex_plane_width_0 / 2 + x_coord
+    b_0_1 = b_0_0 + b_length_diff / 2 - complex_plane_height_0 / 2 + y_coord
+    b_max_1 = b_max_0 - b_length_diff / 2 - complex_plane_height_0 / 2 + y_coord
 
     //create data structure to store iteration outputs
     let complex_image = new Array(width)
@@ -14,15 +36,16 @@ function iterate_complex_plane(max_iterations) {
         complex_image[column] = new Array(height)
     }
 
-    //max value in javascript, so pixels can be painted later according to range
-    let max_value = 1.7e+308
+    //max absolute value around Mandelbrot set
+    let max_value = 2
 
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
 
             //transform canvas coordinates to complex plane coordinates
-            let a = map(x, 0, width, -2/1, 1/1)
-            let b = map(y, 0, height, -1.5/1, 1.5/1)
+            let a = map(x, 0, width, a_0_1, a_max_1)
+            let b = map(y, 0, height, b_0_1, b_max_1)
+
             let c_a = a //original real component of the point being iterated over
             let c_b = b //original imaginary component of the point being iterated over
 
@@ -36,12 +59,14 @@ function iterate_complex_plane(max_iterations) {
 
                 //calculate modulus value of complex number
                 modulus = Math.sqrt(a*a + b*b)
+
+                //if point diverges, stop calculating
                 if (modulus > max_value) {
                     break
                 }
             }
 
-            //store iteration in which "infinity" was reached for each complex number
+            //store iteration in which divergence was confirmed for each complex number
             complex_image[x][y] = i
         }
     }
@@ -72,8 +97,7 @@ function display_complex_image(complex_image, max_iterations, phase) {
             } else {
                 //paint it a color depending how fast it diverges
                 let hue_ = map(value, 0, max_iterations, 0, 360)
-                //let phase = 300   //"degrees" in the cyclical hue wheel
-                hue_ = (hue_ + phase) % 360
+                hue_ = (hue_ + phase) % 360 //the color changes gradually
                 let color_ = color(hue_, 100, 100, 1)
                 pixels[idx + 0] = red(color_)
                 pixels[idx + 1] = green(color_)
